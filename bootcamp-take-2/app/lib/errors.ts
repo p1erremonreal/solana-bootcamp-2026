@@ -4,14 +4,14 @@ import {
 } from "@solana/kit";
 import {
   getVaultErrorMessage,
-  VAULT_ERROR__VAULT_ALREADY_EXISTS,
   VAULT_ERROR__INVALID_AMOUNT,
+  VAULT_ERROR__INSUFFICIENT_FUNDS,
   type VaultError,
 } from "../generated/vault";
 
 const VAULT_ERROR_CODES: Record<number, VaultError> = {
-  [VAULT_ERROR__VAULT_ALREADY_EXISTS]: VAULT_ERROR__VAULT_ALREADY_EXISTS,
   [VAULT_ERROR__INVALID_AMOUNT]: VAULT_ERROR__INVALID_AMOUNT,
+  [VAULT_ERROR__INSUFFICIENT_FUNDS]: VAULT_ERROR__INSUFFICIENT_FUNDS,
 };
 
 export function parseTransactionError(err: unknown): string {

@@ -17,18 +17,24 @@ import {
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
-  parseDepositInstruction,
-  parseWithdrawInstruction,
-  type ParsedDepositInstruction,
-  type ParsedWithdrawInstruction,
+  parseDepositSolInstruction,
+  parseDepositSplInstruction,
+  parseWithdrawSolInstruction,
+  parseWithdrawSplInstruction,
+  type ParsedDepositSolInstruction,
+  type ParsedDepositSplInstruction,
+  type ParsedWithdrawSolInstruction,
+  type ParsedWithdrawSplInstruction,
 } from "../instructions";
 
 export const VAULT_PROGRAM_ADDRESS =
   "6AxCv3ngkPkuQATPgRDTLoFHuUUZbLwX5fbKBvzfrLC9" as Address<"6AxCv3ngkPkuQATPgRDTLoFHuUUZbLwX5fbKBvzfrLC9">;
 
 export enum VaultInstruction {
-  Deposit,
-  Withdraw,
+  DepositSol,
+  DepositSpl,
+  WithdrawSol,
+  WithdrawSpl,
 }
 
 export function identifyVaultInstruction(
@@ -39,23 +45,45 @@ export function identifyVaultInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([242, 35, 198, 137, 82, 225, 242, 182]),
+        new Uint8Array([108, 81, 78, 117, 125, 155, 56, 200]),
       ),
       0,
     )
   ) {
-    return VaultInstruction.Deposit;
+    return VaultInstruction.DepositSol;
   }
   if (
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([183, 18, 70, 156, 148, 109, 161, 34]),
+        new Uint8Array([224, 0, 198, 175, 198, 47, 105, 204]),
       ),
       0,
     )
   ) {
-    return VaultInstruction.Withdraw;
+    return VaultInstruction.DepositSpl;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([145, 131, 74, 136, 65, 137, 42, 38]),
+      ),
+      0,
+    )
+  ) {
+    return VaultInstruction.WithdrawSol;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([181, 154, 94, 86, 62, 115, 6, 186]),
+      ),
+      0,
+    )
+  ) {
+    return VaultInstruction.WithdrawSpl;
   }
   throw new Error(
     "The provided instruction could not be identified as a vault instruction.",
@@ -66,29 +94,49 @@ export type ParsedVaultInstruction<
   TProgram extends string = "6AxCv3ngkPkuQATPgRDTLoFHuUUZbLwX5fbKBvzfrLC9",
 > =
   | ({
-      instructionType: VaultInstruction.Deposit;
-    } & ParsedDepositInstruction<TProgram>)
+      instructionType: VaultInstruction.DepositSol;
+    } & ParsedDepositSolInstruction<TProgram>)
   | ({
-      instructionType: VaultInstruction.Withdraw;
-    } & ParsedWithdrawInstruction<TProgram>);
+      instructionType: VaultInstruction.DepositSpl;
+    } & ParsedDepositSplInstruction<TProgram>)
+  | ({
+      instructionType: VaultInstruction.WithdrawSol;
+    } & ParsedWithdrawSolInstruction<TProgram>)
+  | ({
+      instructionType: VaultInstruction.WithdrawSpl;
+    } & ParsedWithdrawSplInstruction<TProgram>);
 
 export function parseVaultInstruction<TProgram extends string>(
   instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>,
 ): ParsedVaultInstruction<TProgram> {
   const instructionType = identifyVaultInstruction(instruction);
   switch (instructionType) {
-    case VaultInstruction.Deposit: {
+    case VaultInstruction.DepositSol: {
       assertIsInstructionWithAccounts(instruction);
       return {
-        instructionType: VaultInstruction.Deposit,
-        ...parseDepositInstruction(instruction),
+        instructionType: VaultInstruction.DepositSol,
+        ...parseDepositSolInstruction(instruction),
       };
     }
-    case VaultInstruction.Withdraw: {
+    case VaultInstruction.DepositSpl: {
       assertIsInstructionWithAccounts(instruction);
       return {
-        instructionType: VaultInstruction.Withdraw,
-        ...parseWithdrawInstruction(instruction),
+        instructionType: VaultInstruction.DepositSpl,
+        ...parseDepositSplInstruction(instruction),
+      };
+    }
+    case VaultInstruction.WithdrawSol: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: VaultInstruction.WithdrawSol,
+        ...parseWithdrawSolInstruction(instruction),
+      };
+    }
+    case VaultInstruction.WithdrawSpl: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: VaultInstruction.WithdrawSpl,
+        ...parseWithdrawSplInstruction(instruction),
       };
     }
     default:

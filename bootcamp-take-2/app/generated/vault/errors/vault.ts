@@ -14,20 +14,20 @@ import {
 } from "@solana/kit";
 import { VAULT_PROGRAM_ADDRESS } from "../programs";
 
-/** VaultAlreadyExists: Vault already exists */
-export const VAULT_ERROR__VAULT_ALREADY_EXISTS = 0x1770; // 6000
 /** InvalidAmount: Invalid amount */
-export const VAULT_ERROR__INVALID_AMOUNT = 0x1771; // 6001
+export const VAULT_ERROR__INVALID_AMOUNT = 0x1770; // 6000
+/** InsufficientFunds: Insufficient funds in vault */
+export const VAULT_ERROR__INSUFFICIENT_FUNDS = 0x1771; // 6001
 
 export type VaultError =
-  | typeof VAULT_ERROR__INVALID_AMOUNT
-  | typeof VAULT_ERROR__VAULT_ALREADY_EXISTS;
+  | typeof VAULT_ERROR__INSUFFICIENT_FUNDS
+  | typeof VAULT_ERROR__INVALID_AMOUNT;
 
 let vaultErrorMessages: Record<VaultError, string> | undefined;
 if (process.env.NODE_ENV !== "production") {
   vaultErrorMessages = {
+    [VAULT_ERROR__INSUFFICIENT_FUNDS]: `Insufficient funds in vault`,
     [VAULT_ERROR__INVALID_AMOUNT]: `Invalid amount`,
-    [VAULT_ERROR__VAULT_ALREADY_EXISTS]: `Vault already exists`,
   };
 }
 

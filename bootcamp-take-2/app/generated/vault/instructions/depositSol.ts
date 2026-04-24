@@ -40,15 +40,15 @@ import {
   type ResolvedAccount,
 } from "../shared";
 
-export const DEPOSIT_DISCRIMINATOR = new Uint8Array([
-  242, 35, 198, 137, 82, 225, 242, 182,
+export const DEPOSIT_SOL_DISCRIMINATOR = new Uint8Array([
+  108, 81, 78, 117, 125, 155, 56, 200,
 ]);
 
-export function getDepositDiscriminatorBytes() {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(DEPOSIT_DISCRIMINATOR);
+export function getDepositSolDiscriminatorBytes() {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(DEPOSIT_SOL_DISCRIMINATOR);
 }
 
-export type DepositInstruction<
+export type DepositSolInstruction<
   TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountVault extends string | AccountMeta<string> = string,
@@ -73,41 +73,41 @@ export type DepositInstruction<
     ]
   >;
 
-export type DepositInstructionData = {
+export type DepositSolInstructionData = {
   discriminator: ReadonlyUint8Array;
   amount: bigint;
 };
 
-export type DepositInstructionDataArgs = { amount: number | bigint };
+export type DepositSolInstructionDataArgs = { amount: number | bigint };
 
-export function getDepositInstructionDataEncoder(): FixedSizeEncoder<DepositInstructionDataArgs> {
+export function getDepositSolInstructionDataEncoder(): FixedSizeEncoder<DepositSolInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["amount", getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: DEPOSIT_DISCRIMINATOR }),
+    (value) => ({ ...value, discriminator: DEPOSIT_SOL_DISCRIMINATOR }),
   );
 }
 
-export function getDepositInstructionDataDecoder(): FixedSizeDecoder<DepositInstructionData> {
+export function getDepositSolInstructionDataDecoder(): FixedSizeDecoder<DepositSolInstructionData> {
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["amount", getU64Decoder()],
   ]);
 }
 
-export function getDepositInstructionDataCodec(): FixedSizeCodec<
-  DepositInstructionDataArgs,
-  DepositInstructionData
+export function getDepositSolInstructionDataCodec(): FixedSizeCodec<
+  DepositSolInstructionDataArgs,
+  DepositSolInstructionData
 > {
   return combineCodec(
-    getDepositInstructionDataEncoder(),
-    getDepositInstructionDataDecoder(),
+    getDepositSolInstructionDataEncoder(),
+    getDepositSolInstructionDataDecoder(),
   );
 }
 
-export type DepositAsyncInput<
+export type DepositSolAsyncInput<
   TAccountSigner extends string = string,
   TAccountVault extends string = string,
   TAccountSystemProgram extends string = string,
@@ -115,23 +115,23 @@ export type DepositAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   vault?: Address<TAccountVault>;
   systemProgram?: Address<TAccountSystemProgram>;
-  amount: DepositInstructionDataArgs["amount"];
+  amount: DepositSolInstructionDataArgs["amount"];
 };
 
-export async function getDepositInstructionAsync<
+export async function getDepositSolInstructionAsync<
   TAccountSigner extends string,
   TAccountVault extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
 >(
-  input: DepositAsyncInput<
+  input: DepositSolAsyncInput<
     TAccountSigner,
     TAccountVault,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress },
 ): Promise<
-  DepositInstruction<
+  DepositSolInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountVault,
@@ -173,11 +173,11 @@ export async function getDepositInstructionAsync<
       getAccountMeta(accounts.vault),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getDepositInstructionDataEncoder().encode(
-      args as DepositInstructionDataArgs,
+    data: getDepositSolInstructionDataEncoder().encode(
+      args as DepositSolInstructionDataArgs,
     ),
     programAddress,
-  } as DepositInstruction<
+  } as DepositSolInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountVault,
@@ -185,7 +185,7 @@ export async function getDepositInstructionAsync<
   >);
 }
 
-export type DepositInput<
+export type DepositSolInput<
   TAccountSigner extends string = string,
   TAccountVault extends string = string,
   TAccountSystemProgram extends string = string,
@@ -193,18 +193,18 @@ export type DepositInput<
   signer: TransactionSigner<TAccountSigner>;
   vault: Address<TAccountVault>;
   systemProgram?: Address<TAccountSystemProgram>;
-  amount: DepositInstructionDataArgs["amount"];
+  amount: DepositSolInstructionDataArgs["amount"];
 };
 
-export function getDepositInstruction<
+export function getDepositSolInstruction<
   TAccountSigner extends string,
   TAccountVault extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
 >(
-  input: DepositInput<TAccountSigner, TAccountVault, TAccountSystemProgram>,
+  input: DepositSolInput<TAccountSigner, TAccountVault, TAccountSystemProgram>,
   config?: { programAddress?: TProgramAddress },
-): DepositInstruction<
+): DepositSolInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountVault,
@@ -240,11 +240,11 @@ export function getDepositInstruction<
       getAccountMeta(accounts.vault),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getDepositInstructionDataEncoder().encode(
-      args as DepositInstructionDataArgs,
+    data: getDepositSolInstructionDataEncoder().encode(
+      args as DepositSolInstructionDataArgs,
     ),
     programAddress,
-  } as DepositInstruction<
+  } as DepositSolInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountVault,
@@ -252,7 +252,7 @@ export function getDepositInstruction<
   >);
 }
 
-export type ParsedDepositInstruction<
+export type ParsedDepositSolInstruction<
   TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -262,17 +262,17 @@ export type ParsedDepositInstruction<
     vault: TAccountMetas[1];
     systemProgram: TAccountMetas[2];
   };
-  data: DepositInstructionData;
+  data: DepositSolInstructionData;
 };
 
-export function parseDepositInstruction<
+export function parseDepositSolInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
-): ParsedDepositInstruction<TProgram, TAccountMetas> {
+): ParsedDepositSolInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
@@ -290,6 +290,6 @@ export function parseDepositInstruction<
       vault: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getDepositInstructionDataDecoder().decode(instruction.data),
+    data: getDepositSolInstructionDataDecoder().decode(instruction.data),
   };
 }

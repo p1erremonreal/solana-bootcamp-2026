@@ -14,6 +14,8 @@ import {
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU64Decoder,
+  getU64Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -38,15 +40,17 @@ import {
   type ResolvedAccount,
 } from "../shared";
 
-export const WITHDRAW_DISCRIMINATOR = new Uint8Array([
-  183, 18, 70, 156, 148, 109, 161, 34,
+export const WITHDRAW_SOL_DISCRIMINATOR = new Uint8Array([
+  145, 131, 74, 136, 65, 137, 42, 38,
 ]);
 
-export function getWithdrawDiscriminatorBytes() {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(WITHDRAW_DISCRIMINATOR);
+export function getWithdrawSolDiscriminatorBytes() {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(
+    WITHDRAW_SOL_DISCRIMINATOR,
+  );
 }
 
-export type WithdrawInstruction<
+export type WithdrawSolInstruction<
   TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountVault extends string | AccountMeta<string> = string,
@@ -71,34 +75,41 @@ export type WithdrawInstruction<
     ]
   >;
 
-export type WithdrawInstructionData = { discriminator: ReadonlyUint8Array };
+export type WithdrawSolInstructionData = {
+  discriminator: ReadonlyUint8Array;
+  amount: bigint;
+};
 
-export type WithdrawInstructionDataArgs = {};
+export type WithdrawSolInstructionDataArgs = { amount: number | bigint };
 
-export function getWithdrawInstructionDataEncoder(): FixedSizeEncoder<WithdrawInstructionDataArgs> {
+export function getWithdrawSolInstructionDataEncoder(): FixedSizeEncoder<WithdrawSolInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([["discriminator", fixEncoderSize(getBytesEncoder(), 8)]]),
-    (value) => ({ ...value, discriminator: WITHDRAW_DISCRIMINATOR }),
+    getStructEncoder([
+      ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
+      ["amount", getU64Encoder()],
+    ]),
+    (value) => ({ ...value, discriminator: WITHDRAW_SOL_DISCRIMINATOR }),
   );
 }
 
-export function getWithdrawInstructionDataDecoder(): FixedSizeDecoder<WithdrawInstructionData> {
+export function getWithdrawSolInstructionDataDecoder(): FixedSizeDecoder<WithdrawSolInstructionData> {
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
+    ["amount", getU64Decoder()],
   ]);
 }
 
-export function getWithdrawInstructionDataCodec(): FixedSizeCodec<
-  WithdrawInstructionDataArgs,
-  WithdrawInstructionData
+export function getWithdrawSolInstructionDataCodec(): FixedSizeCodec<
+  WithdrawSolInstructionDataArgs,
+  WithdrawSolInstructionData
 > {
   return combineCodec(
-    getWithdrawInstructionDataEncoder(),
-    getWithdrawInstructionDataDecoder(),
+    getWithdrawSolInstructionDataEncoder(),
+    getWithdrawSolInstructionDataDecoder(),
   );
 }
 
-export type WithdrawAsyncInput<
+export type WithdrawSolAsyncInput<
   TAccountSigner extends string = string,
   TAccountVault extends string = string,
   TAccountSystemProgram extends string = string,
@@ -106,22 +117,23 @@ export type WithdrawAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   vault?: Address<TAccountVault>;
   systemProgram?: Address<TAccountSystemProgram>;
+  amount: WithdrawSolInstructionDataArgs["amount"];
 };
 
-export async function getWithdrawInstructionAsync<
+export async function getWithdrawSolInstructionAsync<
   TAccountSigner extends string,
   TAccountVault extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
 >(
-  input: WithdrawAsyncInput<
+  input: WithdrawSolAsyncInput<
     TAccountSigner,
     TAccountVault,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress },
 ): Promise<
-  WithdrawInstruction<
+  WithdrawSolInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountVault,
@@ -142,6 +154,9 @@ export async function getWithdrawInstructionAsync<
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   // Resolve default values.
   if (!accounts.vault.value) {
     accounts.vault.value = await findVaultPda({
@@ -160,9 +175,11 @@ export async function getWithdrawInstructionAsync<
       getAccountMeta(accounts.vault),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getWithdrawInstructionDataEncoder().encode({}),
+    data: getWithdrawSolInstructionDataEncoder().encode(
+      args as WithdrawSolInstructionDataArgs,
+    ),
     programAddress,
-  } as WithdrawInstruction<
+  } as WithdrawSolInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountVault,
@@ -170,7 +187,7 @@ export async function getWithdrawInstructionAsync<
   >);
 }
 
-export type WithdrawInput<
+export type WithdrawSolInput<
   TAccountSigner extends string = string,
   TAccountVault extends string = string,
   TAccountSystemProgram extends string = string,
@@ -178,17 +195,18 @@ export type WithdrawInput<
   signer: TransactionSigner<TAccountSigner>;
   vault: Address<TAccountVault>;
   systemProgram?: Address<TAccountSystemProgram>;
+  amount: WithdrawSolInstructionDataArgs["amount"];
 };
 
-export function getWithdrawInstruction<
+export function getWithdrawSolInstruction<
   TAccountSigner extends string,
   TAccountVault extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
 >(
-  input: WithdrawInput<TAccountSigner, TAccountVault, TAccountSystemProgram>,
+  input: WithdrawSolInput<TAccountSigner, TAccountVault, TAccountSystemProgram>,
   config?: { programAddress?: TProgramAddress },
-): WithdrawInstruction<
+): WithdrawSolInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountVault,
@@ -208,6 +226,9 @@ export function getWithdrawInstruction<
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   // Resolve default values.
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
@@ -221,9 +242,11 @@ export function getWithdrawInstruction<
       getAccountMeta(accounts.vault),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getWithdrawInstructionDataEncoder().encode({}),
+    data: getWithdrawSolInstructionDataEncoder().encode(
+      args as WithdrawSolInstructionDataArgs,
+    ),
     programAddress,
-  } as WithdrawInstruction<
+  } as WithdrawSolInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountVault,
@@ -231,7 +254,7 @@ export function getWithdrawInstruction<
   >);
 }
 
-export type ParsedWithdrawInstruction<
+export type ParsedWithdrawSolInstruction<
   TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -241,17 +264,17 @@ export type ParsedWithdrawInstruction<
     vault: TAccountMetas[1];
     systemProgram: TAccountMetas[2];
   };
-  data: WithdrawInstructionData;
+  data: WithdrawSolInstructionData;
 };
 
-export function parseWithdrawInstruction<
+export function parseWithdrawSolInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
-): ParsedWithdrawInstruction<TProgram, TAccountMetas> {
+): ParsedWithdrawSolInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
@@ -269,6 +292,6 @@ export function parseWithdrawInstruction<
       vault: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getWithdrawInstructionDataDecoder().decode(instruction.data),
+    data: getWithdrawSolInstructionDataDecoder().decode(instruction.data),
   };
 }
